@@ -15,7 +15,7 @@ services:
       - 8.8.4.4
     environment:
       - RESOLVCONF_DISABLE=yes
-      - VPN_SERVER_JP_IP=138.199.22.135
+      - VPN_SERVER_JP_IP=jp-tok-st014.prod.surfshark.com
       - VPN_SERVER_JP_PORT=1194
       - SQUID_PORT_JP=3129
 
@@ -34,6 +34,6 @@ services:
       - 8.8.4.4
     environment:
       - RESOLVCONF_DISABLE=yes
-      - VPN_SERVER_SG_IP=146.70.192.157
+      - VPN_SERVER_SG_IP=sg-sng-st010.prod.surfshark.com
       - VPN_SERVER_SG_PORT=1194
       - SQUID_PORT_SG=3130
