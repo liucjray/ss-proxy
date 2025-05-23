@@ -1,0 +1,39 @@
+version: '3'
+services:
+  vpn-proxy-jp:
+    build: .
+    container_name: vpn-proxy-jp
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - "3129:3129"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    environment:
+      - RESOLVCONF_DISABLE=yes
+      - VPN_SERVER_JP_IP=138.199.22.135
+      - VPN_SERVER_JP_PORT=1194
+      - SQUID_PORT_JP=3129
+
+  vpn-proxy-sg:
+    build: .
+    container_name: vpn-proxy-sg
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - "3130:3130"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    environment:
+      - RESOLVCONF_DISABLE=yes
+      - VPN_SERVER_SG_IP=146.70.192.157
+      - VPN_SERVER_SG_PORT=1194
+      - SQUID_PORT_SG=3130
