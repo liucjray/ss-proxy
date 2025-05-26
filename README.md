@@ -11,8 +11,8 @@
 
 ### docker build and up
 ```
-docker stop vpn-proxy vpn-proxy-jp vpn-proxy-sg || true
-docker rm vpn-proxy vpn-proxy-jp vpn-proxy-sg || true
+docker stop proxy-nginx vpn-proxy-jp vpn-proxy-sg || true
+docker rm proxy-nginx vpn-proxy-jp vpn-proxy-sg || true
 docker-compose build
 docker-compose up -d --remove-orphans
 ```

@@ -1,5 +1,19 @@
 version: '3'
 services:
+
+  nginx:
+    image: nginx:latest
+    container_name: proxy-nginx
+    ports:
+      - "3129:3129"
+      - "3130:3130"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - vpn-proxy-jp
+      - vpn-proxy-sg
+    restart: always
+
   vpn-proxy-jp:
     build: .
     container_name: vpn-proxy-jp
@@ -7,8 +21,6 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun
-    ports:
-      - "3129:3129"
     restart: unless-stopped
     dns:
       - 8.8.8.8
@@ -26,8 +38,6 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun
-    ports:
-      - "3130:3130"
     restart: unless-stopped
     dns:
       - 8.8.8.8
