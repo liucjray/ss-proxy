@@ -24,6 +24,8 @@ curl -m 5 ipinfo.io
 curl -x http://localhost:3128 -m 5 ipinfo.io
 curl -x http://localhost:3129 -m 5 ipinfo.io
 curl -x http://localhost:3130 -m 5 ipinfo.io
+
+curl -x http://rayray123:rayray123@localhost:3129 -m 5 ipinfo.io
 ```
 
 ### log

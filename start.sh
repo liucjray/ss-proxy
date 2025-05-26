@@ -143,6 +143,17 @@ else
     exit 1
 fi
 
+# ----------
+# 設置 Squid 認證
+# ----------
+# 设置默认用户名和密码
+PROXY_USER=${PROXY_USER:-rayray123}
+PROXY_PASS=${PROXY_PASS:-rayray123}
+# 创建认证文件
+htpasswd -cb /etc/squid/passwd "$PROXY_USER" "$PROXY_PASS"
+
+
+
 # 設置 SQUID_PORT
 if [ ! -z "$SQUID_PORT_JP" ]; then
     export SQUID_PORT=$SQUID_PORT_JP

@@ -1,7 +1,7 @@
 FROM dperson/openvpn-client:latest
 
 # 安裝 Squid、curl 和 gettext
-RUN apk add --no-cache squid curl gettext
+RUN apk add --no-cache squid curl gettext apache2-utils
 
 # 複製憑證和 Squid 配置文件
 COPY auth.txt /vpn/vpn.auth

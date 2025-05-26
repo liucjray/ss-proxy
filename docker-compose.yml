@@ -30,6 +30,8 @@ services:
       - VPN_SERVER_JP_IP=jp-tok-st014.prod.surfshark.com
       - VPN_SERVER_JP_PORT=1194
       - SQUID_PORT_JP=3129
+      - PROXY_USER=rayray123
+      - PROXY_PASS=rayray123
 
   vpn-proxy-sg:
     build: .
@@ -47,3 +49,5 @@ services:
       - VPN_SERVER_SG_IP=sg-sng-st010.prod.surfshark.com
       - VPN_SERVER_SG_PORT=1194
       - SQUID_PORT_SG=3130
+      - PROXY_USER=rayray123
+      - PROXY_PASS=rayray123
