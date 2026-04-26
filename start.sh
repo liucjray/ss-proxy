@@ -144,13 +144,61 @@ else
 fi
 
 # ----------
+# Kill Switch：VPN 斷線時封鎖所有流量，防止 fallback 到本機 IP
+# ----------
+echo "Setting up kill switch..."
+
+# 解析 VPN server hostname
+if [ ! -z "$VPN_SERVER_JP_IP" ]; then
+    VPN_HOST=$VPN_SERVER_JP_IP
+    VPN_PORT=${VPN_SERVER_JP_PORT:-1194}
+elif [ ! -z "$VPN_SERVER_SG_IP" ]; then
+    VPN_HOST=$VPN_SERVER_SG_IP
+    VPN_PORT=${VPN_SERVER_SG_PORT:-1194}
+fi
+
+RESOLVED_IP=$(getent hosts $VPN_HOST 2>/dev/null | awk '{print $1}' | head -1)
+if [ -z "$RESOLVED_IP" ]; then
+    RESOLVED_IP=$VPN_HOST
+fi
+echo "Kill switch: VPN server $VPN_HOST resolved to $RESOLVED_IP:$VPN_PORT"
+
+# 清除並設定 OUTPUT chain：預設 DROP
+iptables -F OUTPUT
+iptables -P OUTPUT DROP
+# 允許 loopback
+iptables -A OUTPUT -o lo -j ACCEPT
+# 允許所有走 VPN tunnel 的流量
+iptables -A OUTPUT -o tun0 -j ACCEPT
+# 允許 eth0 上已建立連線的回應封包（Squid 回應 nginx 的流量）
+iptables -A OUTPUT -o eth0 -m state --state ESTABLISHED,RELATED -j ACCEPT
+# 允許連往 VPN server（讓 OpenVPN 斷線後能重連）
+iptables -A OUTPUT -d "$RESOLVED_IP" -p udp --dport "$VPN_PORT" -j ACCEPT
+# 允許 DNS 查詢（OpenVPN 重連時需要解析 hostname）
+iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
+
+echo "Kill switch enabled. OUTPUT rules:"
+iptables -L OUTPUT -v --line-numbers
+
+# ----------
 # 設置 Squid 認證
 # ----------
-# 设置默认用户名和密码
-PROXY_USER=${PROXY_USER:-rayray123}
-PROXY_PASS=${PROXY_PASS:-rayray123}
-# 创建认证文件
-htpasswd -cb /etc/squid/passwd "$PROXY_USER" "$PROXY_PASS"
+# 设置默认认证开关（预设关闭）
+ENABLE_AUTH=${ENABLE_AUTH:-false}
+echo "ENABLE_AUTH=$ENABLE_AUTH"
+
+if [ "$ENABLE_AUTH" = "true" ]; then
+    echo "Authentication is ENABLED"
+    # 设置默认用户名和密码
+    PROXY_USER=${PROXY_USER:-rayray123}
+    PROXY_PASS=${PROXY_PASS:-rayray123}
+    # 创建认证文件
+    htpasswd -cb /etc/squid/passwd "$PROXY_USER" "$PROXY_PASS"
+    echo "Created authentication file with user: $PROXY_USER"
+else
+    echo "Authentication is DISABLED - proxy is open to all"
+fi
 
 
 
@@ -168,7 +216,38 @@ echo "SQUID_PORT=$SQUID_PORT"
 # 檢查 Squid 配置
 echo "Checking Squid configuration..."
 envsubst < /etc/squid/squid.conf > /tmp/squid.conf
-mv /tmp/squid.conf /etc/squid/squid.conf
+
+# 根据 ENABLE_AUTH 替换认证配置
+if [ "$ENABLE_AUTH" = "true" ]; then
+    # 启用认证
+    cat > /tmp/auth_config.txt <<'EOF'
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic realm Squid Proxy
+acl authenticated proxy_auth REQUIRED
+http_access allow authenticated
+http_access deny all
+EOF
+else
+    # 不启用认证，允许所有连接
+    cat > /tmp/auth_config.txt <<'EOF'
+acl localnet src all
+http_access allow all
+EOF
+fi
+
+# 使用 awk 替换占位符（支持多行）
+awk '
+/# AUTH_CONFIG_PLACEHOLDER/ {
+    system("cat /tmp/auth_config.txt")
+    next
+}
+/# This section will be replaced by start.sh/ {
+    next
+}
+{ print }
+' /tmp/squid.conf > /tmp/squid_final.conf
+
+mv /tmp/squid_final.conf /etc/squid/squid.conf
 echo "Generated /etc/squid/squid.conf:"
 cat /etc/squid/squid.conf
 squid -k parse || { echo "Squid configuration error"; exit 1; }

@@ -5,8 +5,8 @@ services:
     image: nginx:latest
     container_name: proxy-nginx
     ports:
-      - "3129:3129"
-      - "3130:3130"
+      - "0.0.0.0:3129:3129"
+      - "0.0.0.0:3130:3130"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     depends_on:
@@ -30,6 +30,7 @@ services:
       - VPN_SERVER_JP_IP=jp-tok-st014.prod.surfshark.com
       - VPN_SERVER_JP_PORT=1194
       - SQUID_PORT_JP=3129
+      - ENABLE_AUTH=false
       - PROXY_USER=rayray123
       - PROXY_PASS=rayray123
 
@@ -49,5 +50,6 @@ services:
       - VPN_SERVER_SG_IP=sg-sng-st010.prod.surfshark.com
       - VPN_SERVER_SG_PORT=1194
       - SQUID_PORT_SG=3130
+      - ENABLE_AUTH=false
       - PROXY_USER=rayray123
       - PROXY_PASS=rayray123
